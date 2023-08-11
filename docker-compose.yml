@@ -1,0 +1,43 @@
+﻿networks:
+  network1:
+    name: my-network
+    attachable: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          ip_range: 172.18.5.0/24
+          gateway: 172.18.0.1
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    networks:
+      - network1
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prom_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  grafana:
+
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - network1
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+volumes:
+  prom_data:
